@@ -240,6 +240,154 @@ def load_trending_list(symbols: tuple[str, ...], refresh_token: int = 0) -> pd.D
     return pd.DataFrame(rows)
 
 
+def _previous_session_low(symbol: str) -> float | None:
+    """Prior trading-session daily low (excludes today's bar when present)."""
+    raw = psxdata.stocks(symbol, cache=True)
+    if raw.empty or "low" not in raw.columns:
+        return None
+    sorted_df = raw.sort_values("date")
+    today = pd.Timestamp.today().normalize()
+    dates = pd.to_datetime(sorted_df["date"]).dt.normalize()
+    prior = sorted_df[dates < today]
+    bar = prior.iloc[-1] if not prior.empty else (
+        sorted_df.iloc[-2] if len(sorted_df) >= 2 else sorted_df.iloc[-1]
+    )
+    low = pd.to_numeric(bar.get("low"), errors="coerce")
+    return float(low) if pd.notna(low) else None
+
+
+def _current_5m_price(symbol: str) -> float | None:
+    """Close of today's latest 5-minute candle from PSX intraday ticks."""
+    ticks = _fetch_intraday_ticks(symbol)
+    if ticks.empty:
+        return None
+
+    idx = pd.to_datetime(ticks["timestamp"], unit="s", utc=True).dt.tz_convert("Asia/Karachi")
+    tick_df = ticks.assign(dt=idx).set_index("dt").sort_index()
+    if tick_df.empty:
+        return None
+
+    today = pd.Timestamp.now(tz="Asia/Karachi").normalize()
+    today_ticks = tick_df[tick_df.index.normalize() == today]
+    if today_ticks.empty:
+        # Fallback: use latest session available in the tick feed
+        sessions = sorted(pd.Series(tick_df.index.normalize()).drop_duplicates())
+        if not sessions:
+            return None
+        today_ticks = tick_df[tick_df.index.normalize() == sessions[-1]]
+    if today_ticks.empty:
+        return None
+
+    ohlc = today_ticks["price"].resample("5min").ohlc().dropna(subset=["open"])
+    if ohlc.empty:
+        return None
+    close = pd.to_numeric(ohlc.iloc[-1]["close"], errors="coerce")
+    return float(close) if pd.notna(close) else None
+
+
+def _gap_down_row(symbol: str) -> dict | None:
+    """Return gap-down row when today's 5m price is below last day's low."""
+    last_day_low = _previous_session_low(symbol)
+    price_5m = _current_5m_price(symbol)
+    if last_day_low is None or price_5m is None:
+        return None
+    if price_5m >= last_day_low:
+        return None
+    return {
+        "Symbol": symbol,
+        "last Day Low": last_day_low,
+        "todays 5m Price": price_5m,
+    }
+
+
+@st.cache_data(ttl=60, show_spinner="Scanning gap downs...")
+def load_gap_down_list(symbols: tuple[str, ...], refresh_token: int = 0) -> pd.DataFrame:
+    """Watchlist stocks whose current 5m candle is below the prior session low."""
+    _ = refresh_token
+    columns = ["Symbol", "last Day Low", "todays 5m Price"]
+    if not symbols:
+        return pd.DataFrame(columns=columns)
+
+    workers = min(8, max(1, len(symbols)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(_gap_down_row, symbols))
+
+    rows = [r for r in results if r is not None]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(rows, columns=columns)
+
+
+def _five_min_up_row(symbol: str, current_price: float | None) -> dict | None:
+    """Include symbol when the 1m close after the first 5m bar exceeds that 5m high."""
+    ticks = _fetch_intraday_ticks(symbol)
+    if ticks.empty:
+        return None
+
+    idx = pd.to_datetime(ticks["timestamp"], unit="s", utc=True).dt.tz_convert("Asia/Karachi")
+    tick_df = ticks.assign(dt=idx).set_index("dt").sort_index()
+    if tick_df.empty:
+        return None
+
+    today = pd.Timestamp.now(tz="Asia/Karachi").normalize()
+    today_ticks = tick_df[tick_df.index.normalize() == today]
+    if today_ticks.empty:
+        return None
+
+    five_m = today_ticks["price"].resample("5min").ohlc().dropna(subset=["open"])
+    one_m = today_ticks["price"].resample("1min").ohlc().dropna(subset=["open"])
+    if five_m.empty or one_m.empty:
+        return None
+
+    first_5m = five_m.iloc[0]
+    five_min_high = pd.to_numeric(first_5m.get("high"), errors="coerce")
+    if pd.isna(five_min_high):
+        return None
+
+    # First 1-minute bar after the opening 5-minute candle (6th minute close).
+    after_5m = five_m.index[0] + pd.Timedelta(minutes=5)
+    later_1m = one_m[one_m.index >= after_5m]
+    if later_1m.empty:
+        return None
+
+    sixth_close = pd.to_numeric(later_1m.iloc[0].get("close"), errors="coerce")
+    if pd.isna(sixth_close) or float(sixth_close) <= float(five_min_high):
+        return None
+
+    price = current_price
+    if price is None:
+        latest = pd.to_numeric(today_ticks["price"].iloc[-1], errors="coerce")
+        price = float(latest) if pd.notna(latest) else None
+
+    return {
+        "Symbol": symbol,
+        "5 min High": float(five_min_high),
+        "Current Price": price,
+    }
+
+
+@st.cache_data(ttl=60, show_spinner="Scanning 5 Minutes Up List...")
+def load_five_min_up_list(symbols: tuple[str, ...], refresh_token: int = 0) -> pd.DataFrame:
+    """Watchlist stocks where the 6th-minute close breaks above the first 5m high."""
+    _ = refresh_token
+    columns = ["Symbol", "5 min High", "Current Price"]
+    if not symbols:
+        return pd.DataFrame(columns=columns)
+
+    board = load_trading_board()
+    prices = _board_price_map(board)
+
+    current_prices = [prices.get(sym) for sym in symbols]
+    workers = min(8, max(1, len(symbols)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(_five_min_up_row, symbols, current_prices))
+
+    rows = [r for r in results if r is not None]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return pd.DataFrame(rows, columns=columns)
+
+
 @st.cache_data(ttl=300, show_spinner=False)
 def load_today_bar(symbol: str) -> pd.DataFrame:
     """Today's daily OHLC row when PSX has published it."""
@@ -251,9 +399,8 @@ def load_today_bar(symbol: str) -> pd.DataFrame:
     return day.sort_values("date")
 
 
-@st.cache_data(ttl=30, show_spinner=False)
-def load_intraday_ticks(symbol: str) -> pd.DataFrame:
-    """Fetch today's PSX intraday ticks: [unix_ts, price, volume]."""
+def _fetch_intraday_ticks(symbol: str) -> pd.DataFrame:
+    """Fetch PSX intraday ticks: [unix_ts, price, volume] (thread-safe)."""
     sym = symbol.upper()
     url = f"{BASE_URL}/timeseries/int/{sym}"
     try:
@@ -273,6 +420,12 @@ def load_intraday_ticks(symbol: str) -> pd.DataFrame:
     df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0.0)
     df = df.dropna(subset=["timestamp", "price"]).sort_values("timestamp")
     return df.reset_index(drop=True)
+
+
+@st.cache_data(ttl=30, show_spinner=False)
+def load_intraday_ticks(symbol: str) -> pd.DataFrame:
+    """Cached wrapper around PSX intraday ticks."""
+    return _fetch_intraday_ticks(symbol)
 
 
 def fetch_live_tick(symbol: str) -> dict:
@@ -1067,6 +1220,65 @@ def render_trending_list_report() -> None:
     ).render()
 
 
+def render_gap_down_list_report() -> None:
+    """Gap Down List — stocks with current 5m price below last day's low."""
+
+    def _on_refresh() -> None:
+        load_intraday_ticks.clear()
+        load_gap_down_list.clear()
+
+    FormTemplate(
+        form_id="gap_down",
+        title="Gap Down List",
+        watchlist_label="Watchlist",
+        report_label="Report",
+        refresh_label="🔄 Refresh",
+        empty_data_message="No watchlist stocks are currently trading below last day's low.",
+        load_records=load_gap_down_list,
+        get_stocks=lambda: list(st.session_state[STOCKS_LIST_KEY]),
+        set_stocks=_update_stocks_list,
+        on_refresh=_on_refresh,
+        resolve_symbol_name=lambda sym: TRENDING_LIST_CATALOG.get(sym, ""),
+        display_columns=["Symbol", "last Day Low", "todays 5m Price"],
+        column_config={
+            "Symbol": st.column_config.TextColumn("Symbol", width="small"),
+            "last Day Low": st.column_config.NumberColumn("last Day Low", format="%.2f"),
+            "todays 5m Price": st.column_config.NumberColumn("todays 5m Price", format="%.2f"),
+        },
+    ).render()
+
+
+def render_five_min_up_list_report() -> None:
+    """5 Minutes Up List — 6th-minute close above first 5m high."""
+
+    def _on_refresh() -> None:
+        load_trading_board.clear()
+        load_intraday_ticks.clear()
+        load_five_min_up_list.clear()
+
+    FormTemplate(
+        form_id="five_min_up",
+        title="5 Minutes Up List",
+        watchlist_label="Watchlist",
+        report_label="Report",
+        refresh_label="🔄 Refresh",
+        empty_data_message=(
+            "No watchlist stocks have a 6th-minute close above the first 5-minute high."
+        ),
+        load_records=load_five_min_up_list,
+        get_stocks=lambda: list(st.session_state[STOCKS_LIST_KEY]),
+        set_stocks=_update_stocks_list,
+        on_refresh=_on_refresh,
+        resolve_symbol_name=lambda sym: TRENDING_LIST_CATALOG.get(sym, ""),
+        display_columns=["Symbol", "5 min High", "Current Price"],
+        column_config={
+            "Symbol": st.column_config.TextColumn("Symbol", width="small"),
+            "5 min High": st.column_config.NumberColumn("5 min High", format="%.2f"),
+            "Current Price": st.column_config.NumberColumn("Current Price", format="%.2f"),
+        },
+    ).render()
+
+
 def render_dashboard(symbol: str) -> None:
     """Main stock analysis dashboard."""
     st.title("PSX Stock Analysis Dashboard")
@@ -1301,6 +1513,8 @@ st.markdown(
 
 REPORT_MENU: dict[str, str] = {
     "Trending List": "trending_list",
+    "Gap Down List": "gap_down_list",
+    "5 Minutes Up List": "five_min_up_list",
     "Candle Chart": "candle_chart",
     "Dashboard": "dashboard",
 }
@@ -1327,6 +1541,10 @@ symbol = "ENGRO"
 
 if st.session_state.current_page == "trending_list":
     render_trending_list_report()
+elif st.session_state.current_page == "gap_down_list":
+    render_gap_down_list_report()
+elif st.session_state.current_page == "five_min_up_list":
+    render_five_min_up_list_report()
 elif st.session_state.current_page == "candle_chart":
     render_candle_chart_page()
 else:
