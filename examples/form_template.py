@@ -25,8 +25,14 @@ def _inject_form_template_styles() -> None:
         """
         <style>
         /* --- Form page: remove top chrome / label gaps --- */
-        .block-container:has(.form-page-marker) {
+        /* Compact top padding only when no Reports menu sits above the form */
+        .block-container:has(.form-page-marker):not(:has(.top-reports-nav-marker)) {
             padding-top: 0.35rem !important;
+        }
+        .block-container:has(.form-page-marker):has(.top-reports-nav-marker) {
+            padding-top: 0.5rem !important;
+        }
+        .block-container:has(.form-page-marker) {
             padding-bottom: 0.5rem !important;
             padding-left: 0.75rem !important;
             padding-right: 0.75rem !important;
@@ -145,8 +151,13 @@ def _inject_form_template_styles() -> None:
         }
 
         @media (max-width: 768px) {
-            .block-container:has(.form-page-marker) {
+            .block-container:has(.form-page-marker):not(:has(.top-reports-nav-marker)) {
                 padding-top: 0.25rem !important;
+            }
+            .block-container:has(.form-page-marker):has(.top-reports-nav-marker) {
+                padding-top: 0.4rem !important;
+            }
+            .block-container:has(.form-page-marker) {
                 padding-left: 0.4rem !important;
                 padding-right: 0.4rem !important;
             }

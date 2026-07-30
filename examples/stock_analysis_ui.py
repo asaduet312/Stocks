@@ -36,7 +36,7 @@ st.set_page_config(
     page_title="PSX Stock Analysis",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 INTRADAY_STATE_KEY = "intraday_snapshots"
@@ -1173,105 +1173,155 @@ def render_dashboard(symbol: str) -> None:
             st.dataframe(kse100.sort_values("idx_weight", ascending=False)[show_cols], use_container_width=True, hide_index=True)
 
 
-# --- Sidebar ---
+# --- Top navigation (in-flow at top of form; reliable on mobile browsers) ---
 st.markdown(
     """
     <style>
-    /* Hide Streamlit top-right chrome completely */
-    header[data-testid="stHeader"],
-    [data-testid="stHeader"],
+    /* Hide Streamlit chrome + left sidebar only (do not hide main content) */
     [data-testid="stToolbar"],
     [data-testid="stToolbarActions"],
     [data-testid="stDecoration"],
     [data-testid="stStatusWidget"],
     [data-testid="stAppDeployButton"],
-    [data-testid="baseButton-header"],
-    [data-testid="baseButton-headerNoPadding"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"],
     #MainMenu,
     #stDecoration,
     .stDeployButton,
     .stAppDeployButton,
-    button[kind="header"],
-    button[title="View app source"],
     div[data-testid="stAppDeployButton"],
+    section[data-testid="stSidebar"],
     section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {
         display: none !important;
         visibility: hidden !important;
-        opacity: 0 !important;
         pointer-events: none !important;
+    }
+    header[data-testid="stHeader"] {
+        background: transparent !important;
         height: 0 !important;
-        width: 0 !important;
         min-height: 0 !important;
-        overflow: hidden !important;
     }
     footer,
     footer[data-testid="stFooter"],
     .stAppFooter {
         display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
     }
-    .stApp > header {
-        background: transparent !important;
-        height: 0 !important;
-        min-height: 0 !important;
-        display: none !important;
-    }
-    .block-container {
-        padding-top: 0.75rem !important;
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    .main {
+        margin-left: 0 !important;
     }
 
-    section[data-testid="stSidebar"] {
-        width: 148px !important;
-        min-width: 148px !important;
-        max-width: 148px !important;
-    }
-    section[data-testid="stSidebar"] > div {
-        width: 148px !important;
+    .block-container {
         padding-top: 0.75rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        max-width: 100% !important;
     }
-    section[data-testid="stSidebar"] button {
-        width: auto !important;
-        min-height: 1.7rem !important;
-        padding: 0.15rem 0.45rem !important;
-        font-size: 0.78rem !important;
-        line-height: 1.1 !important;
-        margin-bottom: 0.25rem !important;
+    /* Keep room for the in-flow Reports menu above form content */
+    .block-container:has(.top-reports-nav-marker),
+    .block-container:has(.top-reports-nav-marker):has(.form-page-marker) {
+        padding-top: 0.5rem !important;
+    }
+
+    .top-reports-nav-marker {
+        display: block;
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    /* Reports menu — first item at top of form (document flow, not fixed) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) {
+        position: relative !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.65rem 0 !important;
+        border: 1px solid rgba(15, 23, 42, 0.14) !important;
+        border-radius: 0.4rem !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+        padding: 0.55rem 0.75rem 0.6rem !important;
+        z-index: 5 !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) label {
+        display: block !important;
+        visibility: visible !important;
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-bottom: 0.15rem !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) [data-testid="stSelectbox"] {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        max-width: 28rem !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) div[data-baseweb="select"] > div {
+        min-height: 2.4rem !important;
+    }
+
+    @media (max-width: 768px) {
+        .block-container,
+        .block-container:has(.top-reports-nav-marker),
+        .block-container:has(.top-reports-nav-marker):has(.form-page-marker) {
+            padding-top: 0.4rem !important;
+            padding-left: 0.55rem !important;
+            padding-right: 0.55rem !important;
+            padding-bottom: 0.75rem !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            margin-bottom: 0.55rem !important;
+            padding: 0.65rem 0.6rem 0.7rem !important;
+            background: #ffffff !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) [data-testid="stSelectbox"] {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) label {
+            font-size: 1.05rem !important;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.top-reports-menu-marker) div[data-baseweb="select"] > div {
+            min-height: 2.75rem !important;
+        }
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+REPORT_MENU: dict[str, str] = {
+    "Trending List": "trending_list",
+    "Candle Chart": "candle_chart",
+    "Dashboard": "dashboard",
+}
+REPORT_MENU_LABELS = list(REPORT_MENU.keys())
+REPORT_PAGE_TO_LABEL = {page: label for label, page in REPORT_MENU.items()}
+
 if "current_page" not in st.session_state:
     st.session_state.current_page = "trending_list"
 
-nav_dashboard = st.sidebar.button(
-    "Dashboard",
-    use_container_width=False,
-    type="primary" if st.session_state.current_page == "dashboard" else "secondary",
-    key="nav_dashboard",
-)
-nav_trending = st.sidebar.button(
-    "Trending List",
-    use_container_width=False,
-    type="primary" if st.session_state.current_page == "trending_list" else "secondary",
-    key="nav_trending",
-)
-nav_candle = st.sidebar.button(
-    "Candle Chart",
-    use_container_width=False,
-    type="primary" if st.session_state.current_page == "candle_chart" else "secondary",
-    key="nav_candle_chart",
-)
-if nav_dashboard:
-    st.session_state.current_page = "dashboard"
-if nav_trending:
-    st.session_state.current_page = "trending_list"
-if nav_candle:
-    st.session_state.current_page = "candle_chart"
+st.markdown('<div class="top-reports-nav-marker"></div>', unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown('<div class="top-reports-menu-marker" aria-hidden="true"></div>', unsafe_allow_html=True)
+    _default_label = REPORT_PAGE_TO_LABEL.get(st.session_state.current_page, REPORT_MENU_LABELS[0])
+    selected_report = st.selectbox(
+        "Reports",
+        options=REPORT_MENU_LABELS,
+        index=REPORT_MENU_LABELS.index(_default_label),
+        key="reports_menu",
+        help="Open a report form",
+    )
+    st.session_state.current_page = REPORT_MENU[selected_report]
 
 symbol = "ENGRO"
 
