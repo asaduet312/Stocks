@@ -1,0 +1,4 @@
+{
+  "$schema":"https://railway.com/railway.schema.json",
+  "deploy":{"startCommand":"streamlit run examples/stock_analysis_ui.py --server.port=$PORT --server.address=0.0.0.0","restartPolicyType":"ON_FAILURE"}
+}

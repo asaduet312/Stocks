@@ -1,3 +1,8 @@
-gunicorn
-flask
+streamlit>=1.37
+pandas
+plotly
+requests
+lxml
+beautifulsoup4
+python-dateutil
 -e .

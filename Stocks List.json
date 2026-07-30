@@ -1,11 +1,6 @@
 {
   "stocks": [
     {
-      "symbol": "PRL",
-      "name": "Pakistan Refinery",
-      "included": true
-    },
-    {
       "symbol": "BIPL",
       "name": "Biafo Industries",
       "included": true
@@ -28,6 +23,216 @@
     {
       "symbol": "FFL",
       "name": "",
+      "included": true
+    },
+    {
+      "symbol": "SYM",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "CNERGY",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "LOTCHEM",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "MZNPETF",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "MIIETF",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PICT",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PPL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "FLYNG",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "FCCL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "NETSOL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "AIRLINK",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "HTL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "KOHE",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "ITTEFAQ",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PAKQATAR",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "TPLRF1",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "ASL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "SSGC",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PREMA",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "AVN",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "FCL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "OCTOPUS",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "IMAGE",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "TREET",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "EPCL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "DOL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PSO",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "MERIT",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "DSL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "WAVES",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "ANL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "GDL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "BIFO",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "SLM",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "STL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "FPJM",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "SGPL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "ITANZ",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "MSCL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "OML",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "MQTM",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "PRL",
+      "name": "Pakistan Refinery",
       "included": true
     }
   ]
