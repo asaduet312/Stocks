@@ -1,8 +1,18 @@
-streamlit>=1.37
-pandas
-plotly
-requests
-lxml
-beautifulsoup4
-python-dateutil
--e .
+# Local psxdata package (pyproject.toml dependencies are installed with it)
+.
+
+# Streamlit UI (examples/stock_analysis_ui.py)
+streamlit>=1.32.0
+plotly>=5.18.0
+
+# Explicit library dependencies (also declared in pyproject.toml)
+beautifulsoup4>=4.11
+diskcache>=5.4
+httpx>=0.24
+lxml>=4.9
+pandas>=2.0
+pyarrow>=14.0
+pydantic>=2.0
+python-dateutil>=2.8
+requests>=2.28
+tqdm>=4.64
