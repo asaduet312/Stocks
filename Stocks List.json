@@ -1,0 +1,34 @@
+{
+  "stocks": [
+    {
+      "symbol": "PRL",
+      "name": "Pakistan Refinery",
+      "included": true
+    },
+    {
+      "symbol": "BIPL",
+      "name": "Biafo Industries",
+      "included": true
+    },
+    {
+      "symbol": "POWER",
+      "name": "Power Cement",
+      "included": true
+    },
+    {
+      "symbol": "LOADS",
+      "name": "Loads Limited",
+      "included": true
+    },
+    {
+      "symbol": "DCL",
+      "name": "",
+      "included": true
+    },
+    {
+      "symbol": "FFL",
+      "name": "",
+      "included": true
+    }
+  ]
+}
