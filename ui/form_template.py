@@ -190,14 +190,15 @@ def _inject_form_template_styles() -> None:
             max-width: 8.5rem !important;
         }
         .form-settings-label {
-            margin: 0 0 0.1rem 0 !important;
+            margin: 0 !important;
             padding: 0 !important;
             font-size: 0.72rem !important;
             font-weight: 600 !important;
-            line-height: 1.1 !important;
+            line-height: 1.7rem !important;
+            white-space: nowrap !important;
         }
 
-        /* Compact inline Min Change % + Refresh (10-min breakout) */
+        /* Title + Min Change % + Refresh on one header row */
         .ten-min-compact-controls {
             display: block;
             height: 0;
@@ -205,7 +206,6 @@ def _inject_form_template_styles() -> None:
             padding: 0;
             overflow: hidden;
         }
-        /* Marker sits above the columns row; style the next horizontal block */
         [data-testid="stElementContainer"]:has(.ten-min-compact-controls) {
             margin: 0 !important;
             padding: 0 !important;
@@ -214,10 +214,16 @@ def _inject_form_template_styles() -> None:
         [data-testid="stElementContainer"]:has(.ten-min-compact-controls)
             + [data-testid="stElementContainer"] [data-testid="stHorizontalBlock"],
         div:has(> .ten-min-compact-controls) + div [data-testid="stHorizontalBlock"] {
-            gap: 0.35rem !important;
+            gap: 0.4rem !important;
             align-items: center !important;
-            margin: 0 0 0.25rem 0 !important;
+            margin: 0 0 0.2rem 0 !important;
             padding: 0 !important;
+        }
+        [data-testid="stElementContainer"]:has(.ten-min-compact-controls)
+            + [data-testid="stElementContainer"] .form-title,
+        div:has(> .ten-min-compact-controls) + div .form-title {
+            white-space: nowrap !important;
+            line-height: 1.7rem !important;
         }
         .st-key-ten_min_breakout_min_change_input,
         .st-key-ten_min_breakout_min_change_input [data-testid="stTextInput"],
@@ -469,7 +475,9 @@ class FormTemplate:
         if token_key not in st.session_state:
             st.session_state[token_key] = 0
 
-        st.markdown(f'<p class="form-title">{self.title}</p>', unsafe_allow_html=True)
+        # When custom controls are provided they own the header row (title + inputs).
+        if self.render_controls is None:
+            st.markdown(f'<p class="form-title">{self.title}</p>', unsafe_allow_html=True)
 
         # Refresh re-runs only this fragment so the watchlist below is not remounted.
         st.fragment(self._stacked_report_fragment)()
