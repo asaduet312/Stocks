@@ -1,0 +1,250 @@
+@page
+@model CandleChartModel
+@{
+    ViewData["Title"] = "Candle Chart";
+    Layout = "_Layout";
+}
+
+<div class="page-wrap">
+    <div class="nav-row">
+        <a class="nav-btn" asp-page="/Index">← Back</a>
+    </div>
+    <h1 class="form-title">Candle Chart</h1>
+
+    <div class="candle-layout">
+        <div class="candle-main">
+            @if (Model.Stocks.Count == 0)
+            {
+                <p class="empty-msg">Add stocks in the Stocks List panel to view candles.</p>
+            }
+            else
+            {
+                <p class="selected-stock"><strong>Selected Stock:</strong> @Model.SelectedTitle</p>
+                @if (Model.Bars.Count == 0)
+                {
+                    <p class="warn-msg">
+                        No intraday ticks for <strong>@Model.Symbol</strong> right now.
+                        Try again during market hours (Mon–Fri, PSX session).
+                    </p>
+                }
+                else
+                {
+                    <div id="chart-host"
+                         data-symbol="@Model.Symbol"
+                         data-bars-url="@Url.Page("/CandleChart", "Bars", new { symbol = Model.Symbol })">
+                    </div>
+                }
+            }
+        </div>
+
+        <aside class="stocks-list-panel">
+            <p class="section-label">Stocks List</p>
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <p class="hint">@Model.Message</p>
+            }
+            <form method="post" asp-page-handler="Add" class="add-row">
+                <input name="NewSymbol" value="@Model.NewSymbol" placeholder="Ticker" maxlength="12" />
+                <button type="submit" class="nav-btn">Add</button>
+            </form>
+
+            @if (Model.Stocks.Count == 0)
+            {
+                <p class="hint">Add a ticker above to start charting.</p>
+            }
+            else
+            {
+                <div class="stock-radio-list">
+                    @foreach (var s in Model.Stocks)
+                    {
+                        var label = string.IsNullOrWhiteSpace(s.Name) ? s.Symbol : $"{s.Symbol} — {s.Name}";
+                        <form method="post" asp-page-handler="Select" class="radio-form">
+                            <input type="hidden" name="symbol" value="@s.Symbol" />
+                            <label class="@(string.Equals(Model.Symbol, s.Symbol, StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                                <input type="radio"
+                                       name="pick"
+                                       value="@s.Symbol"
+                                       @(string.Equals(Model.Symbol, s.Symbol, StringComparison.OrdinalIgnoreCase) ? "checked" : "")
+                                       onchange="this.form.submit()" />
+                                @label
+                            </label>
+                        </form>
+                    }
+                </div>
+                <form method="post" asp-page-handler="Remove" class="remove-selected">
+                    <input type="hidden" name="symbol" value="@Model.Symbol" />
+                    <button type="submit" class="nav-btn wide">Remove selected</button>
+                </form>
+            }
+        </aside>
+    </div>
+</div>
+
+@if (Model.Bars.Count > 0)
+{
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+(() => {
+  const host = document.getElementById('chart-host');
+  if (!host) return;
+
+  let candles = @Html.Raw(Model.CandlesJson);
+  let volumes = @Html.Raw(Model.VolumesJson);
+  const symbol = host.dataset.symbol;
+  const barsUrl = host.dataset.barsUrl;
+  const chartHeight = 520;
+  const wrapHeight = chartHeight + 72;
+  const chartAreaHeight = chartHeight - 8;
+  const title = `${symbol} · last ${candles.length} × 5-min candles · PKR`;
+
+  host.innerHTML = `
+  <div id="wrap">
+    <div id="header">
+      <div id="title">${title}</div>
+      <div id="toolbar">
+        <button class="btn" id="zoom-out" title="Narrower candles">−</button>
+        <button class="btn" id="zoom-in" title="Wider candles">+</button>
+        <button class="btn" id="fit-btn" title="Fit all candles">Fit</button>
+        <button class="btn" id="reset-btn" title="Reset zoom">Reset</button>
+      </div>
+    </div>
+    <div id="hint">Scroll to zoom width · drag price scale for height · drag bottom edge to resize panel</div>
+    <div id="chart-shell"><div id="chart"></div></div>
+    <div id="resize-handle" title="Drag to resize chart height"></div>
+  </div>`;
+
+  const initialBarSpacing = 8;
+  const minBarSpacing = 2;
+  const maxBarSpacing = 40;
+  let barSpacing = initialBarSpacing;
+
+  const wrap = document.getElementById('wrap');
+  const shell = document.getElementById('chart-shell');
+  const container = document.getElementById('chart');
+  const handle = document.getElementById('resize-handle');
+  const titleEl = document.getElementById('title');
+
+  const formatKarachiTime = (time, withSeconds = false) => {
+    const d = new Date(time * 1000);
+    const opts = { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Karachi' };
+    if (withSeconds) opts.second = '2-digit';
+    return d.toLocaleTimeString('en-GB', opts);
+  };
+
+  const formatKarachiTick = (time, tickMarkType) => {
+    const d = new Date(time * 1000);
+    const opts = { timeZone: 'Asia/Karachi' };
+    if (tickMarkType === LightweightCharts.TickMarkType.Year)
+      return d.toLocaleDateString('en-GB', { ...opts, year: 'numeric' });
+    if (tickMarkType === LightweightCharts.TickMarkType.Month)
+      return d.toLocaleDateString('en-GB', { ...opts, month: 'short' });
+    if (tickMarkType === LightweightCharts.TickMarkType.DayOfMonth)
+      return d.toLocaleDateString('en-GB', { ...opts, day: '2-digit', month: 'short' });
+    if (tickMarkType === LightweightCharts.TickMarkType.TimeWithSeconds)
+      return formatKarachiTime(time, true);
+    return formatKarachiTime(time, false);
+  };
+
+  const chart = LightweightCharts.createChart(container, {
+    layout: {
+      background: { type: 'solid', color: '#ffffff' },
+      textColor: '#374151',
+      fontSize: 10,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    },
+    grid: { vertLines: { color: '#e5e7eb' }, horzLines: { color: '#e5e7eb' } },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine: { color: '#9ca3af', width: 1, style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#374151' },
+      horzLine: { color: '#9ca3af', width: 1, style: LightweightCharts.LineStyle.Dashed, labelBackgroundColor: '#374151' },
+    },
+    rightPriceScale: { borderColor: '#e5e7eb', scaleMargins: { top: 0.18, bottom: 0.22 }, autoScale: true },
+    timeScale: {
+      borderColor: '#e5e7eb',
+      timeVisible: true,
+      secondsVisible: false,
+      barSpacing,
+      minBarSpacing,
+      rightOffset: 6,
+      tickMarkFormatter: (time, tickMarkType) => formatKarachiTick(time, tickMarkType),
+    },
+    localization: { locale: 'en-US', timeFormatter: (time) => formatKarachiTime(time, false) },
+    handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+    handleScale: {
+      axisPressedMouseMove: { time: true, price: true },
+      axisDoubleClickReset: { time: true, price: true },
+      mouseWheel: true,
+      pinch: true,
+    },
+  });
+
+  const candleSeries = chart.addCandlestickSeries({
+    upColor: '#26a69a', downColor: '#ef5350', borderVisible: false,
+    wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+  });
+  candleSeries.setData(candles);
+
+  const volumeSeries = chart.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: '' });
+  volumeSeries.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+  volumeSeries.setData(volumes);
+
+  const applyBarSpacing = (next) => {
+    barSpacing = Math.max(minBarSpacing, Math.min(maxBarSpacing, next));
+    chart.timeScale().applyOptions({ barSpacing });
+  };
+  const fitAll = () => {
+    chart.timeScale().fitContent();
+    candleSeries.priceScale().applyOptions({ autoScale: true });
+  };
+  const resetView = () => {
+    applyBarSpacing(initialBarSpacing);
+    candleSeries.priceScale().applyOptions({ autoScale: true, scaleMargins: { top: 0.18, bottom: 0.22 } });
+    fitAll();
+  };
+
+  document.getElementById('zoom-in').addEventListener('click', () => applyBarSpacing(barSpacing + 2));
+  document.getElementById('zoom-out').addEventListener('click', () => applyBarSpacing(barSpacing - 2));
+  document.getElementById('fit-btn').addEventListener('click', fitAll);
+  document.getElementById('reset-btn').addEventListener('click', resetView);
+
+  const resizeChart = () => {
+    const w = shell.clientWidth || wrap.clientWidth || 800;
+    const h = shell.clientHeight || chartAreaHeight;
+    chart.applyOptions({ width: w, height: h });
+  };
+  wrap.style.height = wrapHeight + 'px';
+  shell.style.height = chartAreaHeight + 'px';
+  fitAll();
+  resizeChart();
+  window.addEventListener('resize', resizeChart);
+
+  let dragging = false, startY = 0, startHeight = 0;
+  handle.addEventListener('mousedown', (e) => {
+    dragging = true; startY = e.clientY; startHeight = shell.clientHeight; e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const next = Math.max(220, Math.min(900, startHeight + (e.clientY - startY)));
+    shell.style.height = next + 'px';
+    wrap.style.height = (next + 72) + 'px';
+    resizeChart();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // Auto-poll every 30s — same as Python fragment(run_every=30s)
+  setInterval(async () => {
+    try {
+      const resp = await fetch(barsUrl, { headers: { 'Accept': 'application/json' } });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.candles || !data.candles.length) return;
+      candles = data.candles;
+      volumes = data.volumes;
+      candleSeries.setData(candles);
+      volumeSeries.setData(volumes);
+      titleEl.textContent = `${symbol} · last ${candles.length} × 5-min candles · PKR`;
+    } catch (_) { /* ignore transient errors */ }
+  }, 30000);
+})();
+</script>
+}

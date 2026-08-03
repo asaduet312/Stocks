@@ -1,0 +1,324 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #fff;
+  color: #111827;
+}
+
+.page-wrap {
+  padding: 0.5rem 0.85rem 1rem;
+  max-width: 1400px;
+}
+
+.nav-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+  align-items: center;
+}
+
+.nav-btn {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 0.45rem;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 1.7rem;
+}
+
+.nav-btn:hover { background: #e5e7eb; }
+.nav-btn.wide { width: 100%; margin-top: 0.4rem; }
+
+.form-title {
+  margin: 0;
+  padding: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+
+.settings-label {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.min-change-input {
+  width: 3.6rem;
+  min-height: 2.1rem;
+  font-size: 0.84rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.35rem;
+}
+
+.section-label {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.empty-msg, .warn-msg, .hint {
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.warn-msg { color: #92400e; }
+
+.table-wrap {
+  overflow: visible;
+  max-height: none;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.data-table th, .data-table td {
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.data-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  height: 38px;
+}
+
+.data-table td { height: 36px; }
+
+.watchlist-panel {
+  max-width: 14rem;
+  margin-top: 0.75rem;
+}
+
+.add-row {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.35rem;
+}
+
+.add-row input {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.35rem;
+}
+
+.common-add-row {
+  max-width: 12rem;
+  margin: 0.75rem 0;
+}
+
+.common-add-row input {
+  width: 7rem;
+}
+
+.common-watch-grid {
+  max-width: 10rem;
+  max-height: none;
+  overflow: visible;
+}
+
+.common-watch-grid .data-table {
+  font-size: 0.78rem;
+}
+
+.common-watch-grid .data-table th,
+.common-watch-grid .data-table td {
+  padding: 0.2rem 0.4rem;
+}
+
+.common-watch-grid .data-table th {
+  height: 28px;
+}
+
+.common-watch-grid .data-table td {
+  height: 26px;
+}
+
+.common-watch-grid .data-table th:last-child,
+.common-watch-grid .data-table td:last-child {
+  width: 1.6rem;
+  padding-left: 0.15rem;
+  padding-right: 0.15rem;
+}
+
+.watch-list {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.watch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.8rem;
+}
+
+.inline-form { margin: 0; display: inline; }
+
+.remove-btn {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 0.2rem;
+}
+
+.remove-btn:hover { color: #ef4444; }
+
+.candle-layout {
+  display: grid;
+  grid-template-columns: 1fr 11rem;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+  align-items: start;
+}
+
+.selected-stock {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.95rem;
+}
+
+.stocks-list-panel {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 0.65rem;
+}
+
+.stock-radio-list {
+  max-height: 480px;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+
+.radio-form { margin: 0 0 0.15rem 0; }
+
+.radio-form label {
+  display: block;
+  padding: 0.15rem 0.2rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.radio-form label.active,
+.radio-form label:hover {
+  background: #f3f4f6;
+}
+
+.radio-form input { margin-right: 0.25rem; }
+
+/* TradingView chart shell */
+#chart-host, #wrap {
+  width: 100%;
+  background: #fff;
+}
+
+#wrap {
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 4px;
+}
+
+#title {
+  color: #131722;
+  font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#toolbar { display: flex; gap: 4px; }
+
+#wrap .btn {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  line-height: 1;
+}
+
+#wrap .btn:hover { background: #e5e7eb; }
+
+#hint {
+  color: #6b7280;
+  font: 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 0 10px 4px;
+}
+
+#chart-shell {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+}
+
+#chart { width: 100%; height: 100%; }
+
+#resize-handle {
+  height: 10px;
+  cursor: ns-resize;
+  background: linear-gradient(to bottom, #ffffff, #f3f4f6);
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#resize-handle::after {
+  content: '';
+  width: 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: #9ca3af;
+}
+
+@media (max-width: 900px) {
+  .candle-layout {
+    grid-template-columns: 1fr;
+  }
+  .stocks-list-panel {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    padding-left: 0;
+    padding-top: 0.65rem;
+  }
+}

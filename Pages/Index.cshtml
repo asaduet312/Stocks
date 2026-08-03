@@ -1,0 +1,15 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Stocks Dashboard";
+}
+
+<div class="page-wrap">
+    <div class="nav-row">
+        <a class="nav-btn" asp-page="/TenMinBreakout">10-Minute Breakout Scanner</a>
+        <a class="nav-btn" asp-page="/NearToLow">Near To Low</a>
+        <a class="nav-btn" asp-page="/CandleChart">Candle Chart</a>
+        <a class="nav-btn" asp-page="/CommonWatchListSetup">Common Watchlist Setup</a>
+    </div>
+    <h1 class="form-title">Stocks Dashboard</h1>
+</div>

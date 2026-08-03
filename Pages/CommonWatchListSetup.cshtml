@@ -1,0 +1,55 @@
+@page
+@model CommonWatchListSetupModel
+@{
+    ViewData["Title"] = "Common Watchlist Setup";
+}
+
+<div class="page-wrap">
+    <div class="nav-row">
+        <a class="nav-btn" asp-page="/Index">← Back</a>
+    </div>
+
+    <h1 class="form-title">Common Watchlist Setup</h1>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p class="hint">@Model.Message</p>
+    }
+
+    <form method="post" asp-page-handler="Add" class="add-row common-add-row">
+        <input name="NewSymbol" value="@Model.NewSymbol" placeholder="Ticker" maxlength="12" />
+        <button type="submit" class="nav-btn">Add</button>
+    </form>
+
+    @if (Model.Watchlist.Count == 0)
+    {
+        <p class="empty-msg">No stocks in the Common Watchlist. Add a ticker above.</p>
+    }
+    else
+    {
+        <div class="table-wrap common-watch-grid">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var s in Model.Watchlist)
+                {
+                    <tr>
+                        <td>@s.Symbol</td>
+                        <td>
+                            <form method="post" asp-page-handler="Remove" class="inline-form">
+                                <input type="hidden" name="symbol" value="@s.Symbol" />
+                                <button type="submit" class="remove-btn" title="Delete">✕</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -1,0 +1,56 @@
+@page
+@model NearToLowModel
+@{
+    ViewData["Title"] = "Near To Low";
+}
+
+<div class="page-wrap">
+    <div class="nav-row">
+        <a class="nav-btn" asp-page="/Index">← Back</a>
+    </div>
+
+    <form method="post" asp-page-handler="Refresh" class="header-row">
+        <p class="form-title">Near To Low</p>
+        <button type="submit" class="nav-btn">🔄 Refresh</button>
+    </form>
+
+    <p class="section-label">Common Watchlist</p>
+    @if (Model.Rows.Count == 0)
+    {
+        <p class="empty-msg">No stocks loaded. Check the Common Watchlist or try Refresh.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Current Price</th>
+                        <th>Day Low</th>
+                        <th>Low Distance</th>
+                        <th>Day High</th>
+                        <th>High Distance</th>
+                        <th>Change %</th>
+                        <th>Vol (M)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Rows)
+                {
+                    <tr>
+                        <td>@r.Symbol</td>
+                        <td>@r.CurrentPrice.ToString("0.00")</td>
+                        <td>@r.DayLow.ToString("0.00")</td>
+                        <td>@r.LowDistance.ToString("0.00")</td>
+                        <td>@r.DayHigh.ToString("0.00")</td>
+                        <td>@r.HighDistance.ToString("0.00")</td>
+                        <td>@r.ChangePct.ToString("0.00")</td>
+                        <td>@(r.Volume?.ToString("0.00") ?? "")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
