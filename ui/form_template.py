@@ -196,6 +196,82 @@ def _inject_form_template_styles() -> None:
             font-weight: 600 !important;
             line-height: 1.1 !important;
         }
+
+        /* Compact inline Min Change % + Refresh (10-min breakout) */
+        .ten-min-compact-controls {
+            display: block;
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        /* Marker sits above the columns row; style the next horizontal block */
+        [data-testid="stElementContainer"]:has(.ten-min-compact-controls) {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+        }
+        [data-testid="stElementContainer"]:has(.ten-min-compact-controls)
+            + [data-testid="stElementContainer"] [data-testid="stHorizontalBlock"],
+        div:has(> .ten-min-compact-controls) + div [data-testid="stHorizontalBlock"] {
+            gap: 0.35rem !important;
+            align-items: center !important;
+            margin: 0 0 0.25rem 0 !important;
+            padding: 0 !important;
+        }
+        .st-key-ten_min_breakout_min_change_input,
+        .st-key-ten_min_breakout_min_change_input [data-testid="stTextInput"],
+        .st-key-ten_min_breakout_min_change_input [data-testid="stElementContainer"] {
+            max-width: 3.6rem !important;
+            width: 3.6rem !important;
+            min-width: 3.6rem !important;
+        }
+        .st-key-ten_min_breakout_min_change_input [data-testid="stWidgetLabel"],
+        .st-key-ten_min_breakout_min_change_input [data-testid="stCaptionContainer"],
+        .st-key-ten_min_breakout_refresh [data-testid="stCaptionContainer"] {
+            display: none !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .st-key-ten_min_breakout_min_change_input input,
+        .st-key-ten_min_breakout_min_change_input [data-baseweb="input"],
+        .st-key-ten_min_breakout_min_change_input [data-baseweb="base-input"] {
+            min-height: 1.7rem !important;
+            height: 1.7rem !important;
+            padding: 0.1rem 0.25rem !important;
+            font-size: 0.78rem !important;
+            text-align: center !important;
+        }
+        .st-key-ten_min_breakout_refresh button {
+            min-height: 1.7rem !important;
+            height: 1.7rem !important;
+            padding: 0.1rem 0.55rem !important;
+            font-size: 0.72rem !important;
+            white-space: nowrap !important;
+        }
+        @media (max-width: 768px) {
+            .st-key-ten_min_breakout_min_change_input,
+            .st-key-ten_min_breakout_min_change_input [data-testid="stTextInput"] {
+                max-width: 3.6rem !important;
+                width: 3.6rem !important;
+            }
+            .st-key-ten_min_breakout_min_change_input input,
+            .st-key-ten_min_breakout_min_change_input [data-baseweb="input"],
+            .st-key-ten_min_breakout_min_change_input [data-baseweb="base-input"],
+            .st-key-ten_min_breakout_refresh button {
+                min-height: 1.7rem !important;
+                height: 1.7rem !important;
+            }
+            /* Keep watchlist narrow under the full-width grid on mobile */
+            [data-testid="stVerticalBlock"]:has(.stacked-form)
+                [data-testid="column"]:has(.compact-watchlist-marker) {
+                flex: 0 0 8.5rem !important;
+                width: 8.5rem !important;
+                min-width: 8.5rem !important;
+                max-width: 8.5rem !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -374,8 +450,17 @@ class FormTemplate:
         df = self.load_records(tuple(active), int(st.session_state[token_key]))
         self.render_grid(df)
 
+    def _stacked_report_fragment(self) -> None:
+        """Controls + breakout grid. Intended to run inside st.fragment()."""
+        if self.render_controls is not None:
+            self.render_controls()
+        else:
+            if st.button(self.refresh_label, key=self._key("refresh"), width="content"):
+                self.bump_refresh()
+        self._render_report(self.active_symbols())
+
     def render_stacked(self) -> None:
-        """Mobile-friendly layout: title, controls, report grid, watchlist below."""
+        """Layout: title, controls, full-width report grid, then watchlist below."""
         _inject_form_template_styles()
         st.markdown('<span class="form-page-marker"></span>', unsafe_allow_html=True)
         st.markdown('<span class="stacked-form"></span>', unsafe_allow_html=True)
@@ -386,21 +471,15 @@ class FormTemplate:
 
         st.markdown(f'<p class="form-title">{self.title}</p>', unsafe_allow_html=True)
 
-        if self.render_controls is not None:
-            st.markdown('<div class="form-settings-row">', unsafe_allow_html=True)
-            self.render_controls()
-            st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            if st.button(self.refresh_label, use_container_width=True, key=self._key("refresh")):
-                self.bump_refresh()
-                st.rerun()
+        # Refresh re-runs only this fragment so the watchlist below is not remounted.
+        st.fragment(self._stacked_report_fragment)()
 
+        # Watchlist: rendered with the page, outside the refresh fragment.
         st.markdown('<span class="stacked-watchlist-marker"></span>', unsafe_allow_html=True)
-        report_col, watch_col = st.columns([self.report_ratio, self.watch_ratio], gap="small")
-        with watch_col:
-            active = self.render_watchlist()
-        with report_col:
-            self._render_report(active)
+        with st.container():
+            watch_col, _spacer = st.columns([1, 4], gap="small")
+            with watch_col:
+                self.render_watchlist()
 
     def render(self) -> None:
         """Render the full form: title, refresh, watchlist, and report grid."""
