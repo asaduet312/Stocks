@@ -1,9 +1,7 @@
 """Stocks Dashboard — Streamlit entry point.
 
-Main form: Stocks Dashboard
-Other forms (top buttons, not a dropdown):
-  - 10-Minute Breakout Scanner
-  - Candle Chart
+Each report is an independent page under app_pages/.
+Dashboard shows report buttons; report pages show Back to return home.
 
 Run: streamlit run app.py
 Open: http://localhost:8501
@@ -20,16 +18,6 @@ if str(_REPO_ROOT) not in sys.path:
 import streamlit as st
 
 from data.watchlists import init_stocks_list, init_ten_min_watchlist
-from forms.candle_chart import render_candle_chart_page
-from forms.stocks_dashboard import render_stocks_dashboard
-from forms.ten_min_breakout import render_ten_min_breakout_scanner
-from ui.navigation import (
-    PAGE_CANDLE_CHART,
-    PAGE_STOCKS_DASHBOARD,
-    PAGE_TEN_MIN_BREAKOUT,
-    ensure_current_page,
-    render_top_nav,
-)
 from ui.styles import inject_app_styles
 
 st.set_page_config(
@@ -43,12 +31,31 @@ init_stocks_list()
 init_ten_min_watchlist()
 inject_app_styles()
 
-page = ensure_current_page()
-render_top_nav(page)
+# Drop leftovers from the old session_state form switcher.
+st.session_state.pop("current_page", None)
+st.session_state.pop("reports_form_select", None)
+st.session_state.pop("selected_form", None)
+st.session_state.pop("form_dropdown", None)
 
-if page == PAGE_STOCKS_DASHBOARD:
-    render_stocks_dashboard()
-elif page == PAGE_TEN_MIN_BREAKOUT:
-    render_ten_min_breakout_scanner()
-elif page == PAGE_CANDLE_CHART:
-    render_candle_chart_page()
+pages = [
+    st.Page(
+        "app_pages/stocks_dashboard.py",
+        title="Stocks Dashboard",
+        default=True,
+        url_path="stocks-dashboard",
+    ),
+    st.Page(
+        "app_pages/ten_min_breakout.py",
+        title="10-Minute Breakout Scanner",
+        url_path="ten-min-breakout",
+    ),
+    st.Page(
+        "app_pages/candle_chart.py",
+        title="Candle Chart",
+        url_path="candle-chart",
+    ),
+]
+
+# Hidden built-in nav — dashboard/report pages own their own buttons.
+current = st.navigation(pages, position="hidden")
+current.run()

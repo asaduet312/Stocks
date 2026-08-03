@@ -1,10 +1,14 @@
 # Stocks Dashboard
 
-Streamlit app for Pakistan Stock Exchange. **Stocks Dashboard** is the main form.
+Streamlit app for Pakistan Stock Exchange. **Stocks Dashboard** is the home page.
 
-Forms (top buttons — no dropdown):
+Each report is an **independent page** under `app_pages/`.
 
-1. **Stocks Dashboard** — home / navigation
+- **Dashboard** shows report buttons only
+- Opening a report goes to that page (no dashboard buttons)
+- Report pages have **← Back**, which returns to the dashboard
+
+1. **Stocks Dashboard** — home + report launchers
 2. **10-Minute Breakout Scanner** — watchlist scan for first-10-minute breakouts
 3. **Candle Chart** — 5-minute candles for the latest two sessions
 
@@ -40,15 +44,16 @@ Open http://localhost:8501
 ## Project layout
 
 ```
-app.py                      # Streamlit entry (Stocks Dashboard home)
-forms/                      # Form screens
+app.py                         # Entry: registers pages + top button nav
+app_pages/                     # Independent report pages (edit/copy these)
   stocks_dashboard.py
   ten_min_breakout.py
   candle_chart.py
-  chart_render.py
-data/                       # Watchlists + live market helpers (no Streamlit cache)
-ui/                         # Shared styles, button nav, FormTemplate
-psxdata/                    # Realtime trading-board + HTTP helpers
+data/                          # Watchlists + live market helpers
+ui/                            # Shared styles, nav, FormTemplate, chart helper
+psxdata/                       # Realtime trading-board + HTTP helpers
 Stocks List.json
 10MinutesWatchlist.json
 ```
+
+To add a new report: copy a file in `app_pages/`, register it in `app.py`, add a launcher on the dashboard, and call `render_back_to_dashboard()` at the top of the report page.
