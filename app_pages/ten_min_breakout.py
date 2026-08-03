@@ -106,13 +106,15 @@ form = FormTemplate(
 
 
 def _render_controls() -> None:
-    """Compact inline row: label | tiny % box | Refresh (no border/caption)."""
+    """One header row: title | Minimum Change % | box | Refresh."""
     st.markdown('<span class="ten-min-compact-controls"></span>', unsafe_allow_html=True)
-    label_col, input_col, btn_col, _ = st.columns(
-        [1.55, 0.45, 0.85, 3.15],
+    title_col, label_col, input_col, btn_col, _ = st.columns(
+        [3.2, 1.35, 0.45, 0.85, 1.0],
         gap="small",
         vertical_alignment="center",
     )
+    with title_col:
+        st.markdown(f'<p class="form-title">{form.title}</p>', unsafe_allow_html=True)
     with label_col:
         st.markdown(
             '<p class="form-settings-label">Minimum Change %</p>',
