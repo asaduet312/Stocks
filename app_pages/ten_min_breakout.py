@@ -106,30 +106,37 @@ form = FormTemplate(
 
 
 def _render_controls() -> None:
-    with st.container(border=True):
-        top_c1, top_c2 = st.columns([2.0, 0.9], gap="small")
-        with top_c1:
-            st.markdown('<p class="form-settings-label">Minimum Change %</p>', unsafe_allow_html=True)
-            st.text_input(
-                "Minimum Change %",
-                value=str(st.session_state.get("ten_min_breakout_min_change", "2.0")),
-                key="ten_min_breakout_min_change_input",
-                label_visibility="collapsed",
-            )
-        with top_c2:
-            st.markdown('<p class="form-settings-label">&nbsp;</p>', unsafe_allow_html=True)
-            if st.button(form.refresh_label, use_container_width=True, key=form._key("refresh")):
-                _apply_ten_min_settings()
-                form.bump_refresh()
-                st.rerun()
-
-        st.caption(
-            "On Refresh: Change % ≥ Minimum Change %, first 10-minute candle green, "
-            "and live price above that candle's high (current breakout only)."
+    """Compact inline row: label | tiny % box | Refresh (no border/caption)."""
+    st.markdown('<span class="ten-min-compact-controls"></span>', unsafe_allow_html=True)
+    label_col, input_col, btn_col, _ = st.columns(
+        [1.55, 0.45, 0.85, 3.15],
+        gap="small",
+        vertical_alignment="center",
+    )
+    with label_col:
+        st.markdown(
+            '<p class="form-settings-label">Minimum Change %</p>',
+            unsafe_allow_html=True,
         )
+    with input_col:
+        st.text_input(
+            "Minimum Change %",
+            value=str(st.session_state.get("ten_min_breakout_min_change", "2.0")),
+            key="ten_min_breakout_min_change_input",
+            label_visibility="collapsed",
+            max_chars=6,
+            width=58,  # ~3.6rem — fits values like 2.0
+        )
+    with btn_col:
+        if st.button("🔄 Refresh", key=form._key("refresh"), width="content"):
+            _apply_ten_min_settings()
+            form.bump_refresh()
+            # Fragment-scoped: reload breakouts only; do not remount the watchlist.
+            st.rerun(scope="fragment")
 
     _apply_ten_min_settings()
 
 
 form.render_controls = _render_controls
-form.render()
+# Always stack: breakout grid full-width, watchlist on the row below (not beside).
+form.render_stacked()
