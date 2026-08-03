@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psxdata"
+version = "0.1.0a5"
+description = "Minimal PSX data helpers for the Stocks Dashboard Streamlit app"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE.md"}
+dependencies = [
+    "requests>=2.28",
+    "beautifulsoup4>=4.11",
+    "lxml>=4.9",
+    "pandas>=2.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["psxdata*"]

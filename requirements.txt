@@ -1,0 +1,11 @@
+# Local psxdata package (pyproject.toml dependencies are installed with it)
+.
+
+# Streamlit UI (examples/stock_analysis_ui.py)
+streamlit>=1.32.0
+
+# Explicit library dependencies (also declared in pyproject.toml)
+beautifulsoup4>=4.11
+lxml>=4.9
+pandas>=2.0
+requests>=2.28
